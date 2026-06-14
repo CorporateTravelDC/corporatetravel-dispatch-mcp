@@ -1,5 +1,9 @@
 # corporatetravel-dispatch-mcp
 
+> **Right repo?** You want **`corporatetravel-dispatch-mcp`** (this one) for the MCP server.
+> The dispatch platform source lives at [`corporatetraveldc-dispatch`](https://github.com/CorporateTravelDC/corporatetraveldc-dispatch).
+> The public mirror is at [`ctdi-dispatch`](https://github.com/CorporateTravelDC/ctdi-dispatch).
+
 MCP server exposing the CS Executive Services dispatch platform and airplanes.live flight
 tracking as portable, agent-agnostic tools. Works with any MCP-compatible agent: Claude Code,
 Cline, Cursor, Zed, Windsurf, and others via [mcpo](./docs/mcpo-openwebui.md) → Open WebUI.
