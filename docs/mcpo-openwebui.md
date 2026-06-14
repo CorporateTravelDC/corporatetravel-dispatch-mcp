@@ -1,67 +1,87 @@
 # Wiring dispatch-mcp into Open WebUI via mcpo
 
-[mcpo](https://github.com/open-webui/mcpo) is an MCP-to-OpenAPI bridge. It runs on the Pi
-and exposes any MCP server as an OpenAPI spec, which Open WebUI can consume as a single
-"OpenAPI Tool" source. New tools added to the MCP server appear automatically in Open WebUI
-without any reconfiguration.
+[mcpo](https://github.com/open-webui/mcpo) bridges MCP stdio servers to an OpenAPI HTTP
+endpoint. Open WebUI (and Conduit) consume it as a "Tool" source. New tools added to
+`dispatch-mcp` appear in Open WebUI automatically after an mcpo restart — no reconfiguration.
 
 ## Architecture
 
 ```
-Conduit (Android) ──> Open WebUI ──> mcpo (Pi, :8001) ──> dispatch-mcp (stdio) ──> ops.csexecutiveservices.com
-                                                                                   ──> airplanes.live
+Conduit (Android / iOS)
+        │
+        ▼
+openwebui.csexecutiveservices.com
+        │
+        ▼
+Open WebUI  (:3000, container)
+        │  calls tools via HTTP
+        ▼
+mcpo (:8082, host — corporatetraveldc-mcpo.service)
+        │  spawns subprocess
+        ▼
+dispatch-mcp (stdio)
+        │                         │
+        ▼                         ▼
+ops.csexecutiveservices.com   airplanes.live
 ```
 
-## Install mcpo on the Pi
+External clients (Cline, Cursor, Windsurf) can also reach mcpo directly at
+`https://mcpo.csexecutiveservices.com`.
 
-```bash
-pip install mcpo --break-system-packages
-```
+## Current deployment (Pi — already running)
 
-Or run as a rootless Podman container (see quadlet example below).
+mcpo runs as a systemd user service, not a container, because `dispatch-mcp` is a host
+Python binary and spawning it from inside a container is unnecessarily complex.
 
-## Run mcpo pointing at dispatch-mcp
-
-```bash
-mcpo \
-  --port 8001 \
-  --server-type stdio \
-  --command "dispatch-mcp" \
-  -- \
-  --env DISPATCH_BASE_URL=https://ops.csexecutiveservices.com \
-  --env DISPATCH_TOKEN=<your-token>
-```
-
-mcpo will start and expose the OpenAPI spec at `http://localhost:8001/openapi.json`.
-
-## Podman Quadlet for mcpo (rootless, user corporatetraveldc)
-
-Create `/home/corporatetraveldc/.config/containers/systemd/mcpo.container`:
+**Service file:** `~/.config/systemd/user/corporatetraveldc-mcpo.service`
 
 ```ini
 [Unit]
-Description=mcpo — MCP to OpenAPI bridge for dispatch-mcp
+Description=Corporate Travel DC -- mcpo (MCP-over-OpenAPI bridge for dispatch-mcp)
+Documentation=https://github.com/CorporateTravelDC/corporatetravel-dispatch-mcp
 After=network-online.target
-
-[Container]
-Image=ghcr.io/open-webui/mcpo:latest
-PublishPort=8001:8001
-Environment=DISPATCH_BASE_URL=https://ops.csexecutiveservices.com
-EnvironmentFile=/etc/corporatetraveldc/dispatch-secrets.env
-Exec=--port 8001 --server-type stdio --command dispatch-mcp
+After=podman-user-wait-network-online.service
 
 [Service]
+Type=simple
 Restart=always
 RestartSec=10
+
+EnvironmentFile=/etc/corporatetraveldc/dispatch.env
+EnvironmentFile=/etc/corporatetraveldc/dispatch-secrets.env
+
+ExecStart=/home/corporatetraveldc/.local/bin/mcpo --port 8082 -- /home/corporatetraveldc/.local/bin/dispatch-mcp
 
 [Install]
 WantedBy=default.target
 ```
 
-Then:
+Start/stop/status:
+
+```bash
+systemctl --user {start,stop,restart,status} corporatetraveldc-mcpo
+```
+
+## Install from scratch
+
+mcpo and dispatch-mcp are Pi-wheel-free packages. On Fedora with a PEP 668 system Python,
+bypass piwheels (which is unreachable on non-RPi-OS systems) and install to user site:
+
+```bash
+pip install --user --break-system-packages \
+  --index-url https://pypi.org/simple \
+  mcpo
+
+pip install --user --break-system-packages \
+  --index-url https://pypi.org/simple \
+  'git+https://github.com/CorporateTravelDC/corporatetravel-dispatch-mcp.git'
+```
+
+Then drop the service file above into `~/.config/systemd/user/` and:
+
 ```bash
 systemctl --user daemon-reload
-systemctl --user enable --now mcpo
+systemctl --user enable --now corporatetraveldc-mcpo
 ```
 
 ## Configure Open WebUI
@@ -69,16 +89,39 @@ systemctl --user enable --now mcpo
 1. Open `https://openwebui.csexecutiveservices.com`
 2. Admin Panel → Settings → Tools → Add Tool
 3. Type: **OpenAPI**
-4. URL: `http://localhost:8001/openapi.json`  (or `http://100.94.80.100:8001/openapi.json` from remote)
+4. URL: `http://host.containers.internal:8082/openapi.json`
+   (Open WebUI runs in a container; `host.containers.internal` resolves to the Pi host)
 5. Save
 
-All 21 dispatch-mcp tools now appear in Open WebUI and Conduit automatically.
-Any new tools added to dispatch-mcp will appear after restarting mcpo.
+All 25 dispatch-mcp tools appear in Open WebUI and Conduit immediately.
+
+## Configure external clients (Cline / Cursor / Windsurf)
+
+These run outside the container and reach mcpo over the CF tunnel:
+
+```
+https://mcpo.csexecutiveservices.com/openapi.json
+```
+
+Add as an OpenAPI tool server in each client's settings using that URL.
 
 ## Verify
 
 ```bash
-curl http://localhost:8001/openapi.json | jq '.paths | keys'
+# From Pi host
+curl http://127.0.0.1:8082/openapi.json | python3 -c \
+  'import sys,json; d=json.load(sys.stdin); print(len(d["paths"]), "tools")'
+
+# From anywhere (CF tunnel)
+curl https://mcpo.csexecutiveservices.com/openapi.json | python3 -c \
+  'import sys,json; d=json.load(sys.stdin); print(len(d["paths"]), "tools")'
 ```
 
-Should return all tool paths. Each MCP tool becomes a POST endpoint.
+Should print `25 tools`. Each MCP tool is a POST endpoint under its tool name.
+
+## CF tunnel hostnames
+
+| Hostname | Service | Notes |
+|---|---|---|
+| `openwebui.csexecutiveservices.com` | `:3000` | Open WebUI frontend |
+| `mcpo.csexecutiveservices.com` | `:8082` | mcpo OpenAPI bridge |
