@@ -80,13 +80,25 @@ Requires Python 3.11+.
 
 ## Use with Claude Code
 
-Add to `~/.claude/settings.json` (or project `.claude/settings.json`):
+Register at user scope (persists across projects):
+
+```bash
+claude mcp add dispatch \
+  -e DISPATCH_BASE_URL=https://ops.csexecutiveservices.com \
+  -e DISPATCH_TOKEN=your-token-here \
+  --scope user \
+  -- dispatch-mcp
+```
+
+Or add to `~/.claude/.claude.json` directly under `"mcpServers"`:
 
 ```json
 {
   "mcpServers": {
     "dispatch": {
-      "command": "dispatch-mcp",
+      "type": "stdio",
+      "command": "/full/path/to/dispatch-mcp",
+      "args": [],
       "env": {
         "DISPATCH_BASE_URL": "https://ops.csexecutiveservices.com",
         "DISPATCH_TOKEN": "your-token-here"
