@@ -78,6 +78,28 @@ Requires Python 3.11+.
 | `DISPATCH_MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
 | `DISPATCH_MCP_PORT` | `8080` | Port when transport=http |
 
+## Context efficiency and plan compatibility
+
+MCP tool responses are structured and compact — each tool returns only the data the agent
+actually needs, rather than dumping raw API payloads into the context window. This matters
+for subscription plan users:
+
+- **Claude Pro ($20/mo)** — operational dispatch workflows (TFR checks, CPS queries, flight
+  lookups, daily brief) stay well within the 5-hour message window because context stays lean.
+  No API key required. Pairing with a context guardian skill (e.g. the
+  `dispatch-context-guardian` Cowork skill bundled with this deployment) automatically compacts
+  sessions before they hit plan limits, extending sessions significantly without manual
+  intervention.
+- **Claude Max / API** — no additional benefit from a guardian on that axis, but the compact
+  responses still reduce per-request token cost and latency.
+- **Cline / Cursor / Windsurf** — same economy applies; MCP tool calls consume far fewer tokens
+  than equivalent REST-then-paste workflows.
+
+The guardian angle is specifically useful for operators running continuous dispatch monitoring
+inside a chat session — without it, accumulated API responses and skill output would exhaust a
+Pro plan window in under an hour. With compact tool responses + guardian-triggered compaction,
+the same session can run for a full shift.
+
 ## Use with Claude Code
 
 Register at user scope (persists across projects):
