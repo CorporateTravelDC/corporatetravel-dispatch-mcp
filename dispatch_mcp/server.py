@@ -24,7 +24,7 @@ Environment variables:
     DISPATCH_MCP_TRANSPORT  'stdio' or 'http' (default: stdio)
     DISPATCH_MCP_PORT       Port for HTTP transport (default: 8080)
 
-Tool inventory (21 tools):
+Tool inventory (26 tools):
     Dispatch platform — Tier 0 (no auth):
         dispatch_health_check          /healthz
         dispatch_get_feeds             /api/v1/feeds
@@ -44,6 +44,10 @@ Tool inventory (21 tools):
         dispatch_watchlist_get         /api/v1/watchlist  GET
         dispatch_watchlist_add         /api/v1/watchlist  POST
         dispatch_watchlist_remove      /api/v1/watchlist  DELETE
+
+    FAA Aircraft Registry (local cache, updated weekly):
+        dispatch_lookup_aircraft       /api/v1/aircraft/{identifier}
+        dispatch_faa_registry_status   /api/v1/aircraft-registry/status
 
     Admin (DISPATCH_TOKEN required):
         dispatch_admin_health          /admin/healthz
