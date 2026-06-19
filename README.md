@@ -71,7 +71,7 @@ Requires Python 3.11+.
 
 | Env var | Default | Notes |
 |---|---|---|
-| `DISPATCH_BASE_URL` | `https://your-dispatch-instance.example.com` | Use Tailscale IP for runsheet |
+| `DISPATCH_BASE_URL` | `https://your-dispatch.your-domain` | Use Tailscale IP for runsheet |
 | `DISPATCH_TOKEN` | _(empty)_ | Required for admin tools (`csex-token create`) |
 | `DISPATCH_TIMEOUT` | `30` | HTTP timeout (seconds) |
 | `ADSB_TIMEOUT` | `15` | airplanes.live timeout (seconds) |
@@ -106,7 +106,7 @@ Register at user scope (persists across projects):
 
 ```bash
 claude mcp add dispatch \
-  -e DISPATCH_BASE_URL=https://your-dispatch-instance.example.com \
+  -e DISPATCH_BASE_URL=https://your-dispatch.your-domain \
   -e DISPATCH_TOKEN=your-token-here \
   --scope user \
   -- dispatch-mcp
@@ -122,7 +122,7 @@ Or add to `~/.claude/.claude.json` directly under `"mcpServers"`:
       "command": "/full/path/to/dispatch-mcp",
       "args": [],
       "env": {
-        "DISPATCH_BASE_URL": "https://your-dispatch-instance.example.com",
+        "DISPATCH_BASE_URL": "https://your-dispatch.your-domain",
         "DISPATCH_TOKEN": "your-token-here"
       }
     }
