@@ -71,7 +71,7 @@ Requires Python 3.11+.
 
 | Env var | Default | Notes |
 |---|---|---|
-| `DISPATCH_BASE_URL` | `https://ops.csexecutiveservices.com` | Use Tailscale IP for runsheet |
+| `DISPATCH_BASE_URL` | `https://your-dispatch-instance.example.com` | Use Tailscale IP for runsheet |
 | `DISPATCH_TOKEN` | _(empty)_ | Required for admin tools (`csex-token create`) |
 | `DISPATCH_TIMEOUT` | `30` | HTTP timeout (seconds) |
 | `ADSB_TIMEOUT` | `15` | airplanes.live timeout (seconds) |
@@ -106,7 +106,7 @@ Register at user scope (persists across projects):
 
 ```bash
 claude mcp add dispatch \
-  -e DISPATCH_BASE_URL=https://ops.csexecutiveservices.com \
+  -e DISPATCH_BASE_URL=https://your-dispatch-instance.example.com \
   -e DISPATCH_TOKEN=your-token-here \
   --scope user \
   -- dispatch-mcp
@@ -122,7 +122,7 @@ Or add to `~/.claude/.claude.json` directly under `"mcpServers"`:
       "command": "/full/path/to/dispatch-mcp",
       "args": [],
       "env": {
-        "DISPATCH_BASE_URL": "https://ops.csexecutiveservices.com",
+        "DISPATCH_BASE_URL": "https://your-dispatch-instance.example.com",
         "DISPATCH_TOKEN": "your-token-here"
       }
     }
@@ -156,7 +156,7 @@ echo "All clean"
 - Tier 0 endpoints (`/api/v1/*`) require no authentication.
 - `dispatch_get_runsheet` is Tier 1 (Tailscale-gated): set `DISPATCH_BASE_URL=http://100.94.80.100:8000`.
 - Admin endpoints require `DISPATCH_TOKEN`. Create tokens on the Pi: `csex-token create`.
-- `dispatch.csexecutiveservices.com` has Cloudflare Access on POST routes; use `ops.csexecutiveservices.com` for programmatic access.
+- Some deployments put Cloudflare Access on POST routes of the public dispatch hostname; use the ops hostname for programmatic access.
 - CUI rules: this server never generates or exposes SHARES/HEARS/HEART frequencies. The platform ships with empty placeholder credential files.
 
 ## License

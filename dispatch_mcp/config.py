@@ -1,19 +1,19 @@
 """Configuration for corporatetravel-dispatch-mcp.
 
 All values are environment-variable overridable so the same server binary works
-against local Tailscale, ops.csexecutiveservices.com, or a dev instance.
+against a local Tailscale address, a public ops hostname, or a dev instance.
 """
 
 import os
 
 # Dispatch platform base URL.
-# Default: ops.csexecutiveservices.com (no Cloudflare Access gate).
+# Default: generic placeholder — set DISPATCH_BASE_URL to your actual instance.
 # Override: DISPATCH_BASE_URL env var.
 # Notes:
-#   - dispatch.csexecutiveservices.com has Cloudflare Access on POST routes; prefer ops for programmatic use.
-#   - Tailscale (http://100.94.80.100:8000) works on-net and bypasses CF entirely.
+#   - Some deployments put Cloudflare Access on POST routes; use the ops hostname for programmatic use.
+#   - Tailscale addresses work on-net and bypass CF entirely.
 DISPATCH_BASE_URL: str = os.environ.get(
-    "DISPATCH_BASE_URL", "https://ops.csexecutiveservices.com"
+    "DISPATCH_BASE_URL", "https://your-dispatch-instance.example.com"
 ).rstrip("/")
 
 # Admin bearer token for /admin/* routes. Created via `csex-token create`.
