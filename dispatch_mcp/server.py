@@ -17,7 +17,7 @@ Usage:
     DISPATCH_MCP_TRANSPORT=http DISPATCH_MCP_PORT=8080 dispatch-mcp
 
 Environment variables:
-    DISPATCH_BASE_URL   Dispatch platform base URL (default: https://ops.csexecutiveservices.com)
+    DISPATCH_BASE_URL   Dispatch platform base URL (default: https://your-dispatch-instance.example.com)
     DISPATCH_TOKEN      Admin bearer token for /admin/* routes (create with csex-token create)
     DISPATCH_TIMEOUT    HTTP timeout in seconds for dispatch calls (default: 30)
     ADSB_TIMEOUT        HTTP timeout in seconds for airplanes.live calls (default: 15)

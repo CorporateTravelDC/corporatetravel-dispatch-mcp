@@ -22,7 +22,7 @@ mcpo (:8082, host — corporatetraveldc-mcpo.service)
 dispatch-mcp (stdio)
         │                         │
         ▼                         ▼
-ops.csexecutiveservices.com   airplanes.live
+your-dispatch-instance.example.com   airplanes.live
 ```
 
 External clients (Cline, Cursor, Windsurf) can also reach mcpo directly at
