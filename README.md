@@ -8,6 +8,22 @@ MCP server exposing the CS Executive Services dispatch platform and airplanes.li
 tracking as portable, agent-agnostic tools. Works with any MCP-compatible agent: Claude Code,
 Cline, Cursor, Zed, Windsurf, and others via [mcpo](./docs/mcpo-openwebui.md) → Open WebUI.
 
+## Screenshots
+
+| Overview & Health | Feed Status |
+|---|---|
+| ![Overview](docs/screenshots/overview.png) | ![Feeds](docs/screenshots/feeds.png) |
+
+| Weather (DC Metro) | CPS Scorecard |
+|---|---|
+| ![Weather](docs/screenshots/weather.png) | ![CPS](docs/screenshots/cps.png) |
+
+| Active TFRs | Ops Brief |
+|---|---|
+| ![TFRs](docs/screenshots/tfr.png) | ![Brief](docs/screenshots/brief.png) |
+
+> All aircraft registrations and hex identifiers shown are sanitized for publication.
+
 ## Tools (21 total)
 
 ### Dispatch Platform — Tier 0 (no auth required)
