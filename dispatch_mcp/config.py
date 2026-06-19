@@ -13,7 +13,7 @@ import os
 #   - Some deployments put Cloudflare Access on POST routes; use the ops hostname for programmatic use.
 #   - Tailscale addresses work on-net and bypass CF entirely.
 DISPATCH_BASE_URL: str = os.environ.get(
-    "DISPATCH_BASE_URL", "https://your-dispatch-instance.example.com"
+    "DISPATCH_BASE_URL", "https://your-dispatch.your-domain"
 ).rstrip("/")
 
 # Admin bearer token for /admin/* routes. Created via `csex-token create`.

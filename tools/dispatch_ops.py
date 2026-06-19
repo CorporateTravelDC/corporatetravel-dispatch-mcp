@@ -4,7 +4,7 @@ dispatch_ops.py — MCP tools wrapping Tier 0 (no-auth) read-only dispatch REST 
 All endpoints are available without authentication and proxy data collected by
 the dispatch platform's poller and ingest services.
 
-Base URL comes from config.DISPATCH_BASE_URL (default: https://your-dispatch-instance.example.com).
+Base URL comes from config.DISPATCH_BASE_URL (default: https://your-dispatch.your-domain).
 
 Covered endpoints:
   GET /healthz                         → platform health check
