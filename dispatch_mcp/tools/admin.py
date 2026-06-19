@@ -3,8 +3,8 @@
 All admin tools require a valid DISPATCH_TOKEN bearer token.
 Create one on the Pi with: csex-token create
 
-Admin routes are only accessible from Tailscale (100.x.x.x) or via ops.csexecutiveservices.com
-with a valid token. dispatch.csexecutiveservices.com has Cloudflare Access on POST routes.
+Admin routes are only accessible from Tailscale (100.x.x.x) or via the ops hostname
+with a valid token. Some deployments put Cloudflare Access on POST routes of the public dispatch hostname.
 """
 
 import json
