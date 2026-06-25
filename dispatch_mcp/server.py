@@ -24,7 +24,7 @@ Environment variables:
     DISPATCH_MCP_TRANSPORT  'stdio' or 'http' (default: stdio)
     DISPATCH_MCP_PORT       Port for HTTP transport (default: 8080)
 
-Tool inventory (26 tools):
+Tool inventory (30 tools):
     Dispatch platform — Tier 0 (no auth):
         dispatch_health_check          /healthz
         dispatch_get_feeds             /api/v1/feeds
@@ -45,6 +45,10 @@ Tool inventory (26 tools):
         dispatch_watchlist_add         /api/v1/watchlist  POST
         dispatch_watchlist_remove      /api/v1/watchlist  DELETE
 
+    Dispatch platform — FIDS (DCA/IAD gate + baggage, MWAA):
+        dispatch_get_fids_flight       /api/v1/fids/{airport}/{flight}
+        dispatch_get_fids_snapshot     /api/v1/fids/{airport}
+
     FAA Aircraft Registry (local cache, updated weekly):
         dispatch_lookup_aircraft       /api/v1/aircraft/{identifier}
         dispatch_faa_registry_status   /api/v1/aircraft-registry/status
@@ -61,6 +65,9 @@ Tool inventory (26 tools):
         flight_get_by_callsign         /v2/callsign/{callsign}
         flight_get_by_registration     /v2/reg/{registration}
         flight_get_by_hex              /v2/hex/{hex}
+
+    ACARS — airframes.io (no auth):
+        acars_get_by_hex               messages?aircraft={hex}
 """
 
 import os

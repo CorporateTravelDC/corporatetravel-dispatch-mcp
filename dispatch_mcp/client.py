@@ -11,8 +11,10 @@ from dispatch_mcp.config import (
     DISPATCH_BASE_URL,
     DISPATCH_TOKEN,
     ADSB_BASE_URL,
+    ACARS_BASE_URL,
     DISPATCH_TIMEOUT,
     ADSB_TIMEOUT,
+    ACARS_TIMEOUT,
 )
 
 _DISPATCH_HEADERS = {
@@ -78,6 +80,36 @@ async def adsb_get(path: str) -> dict[str, Any]:
         r = await client.get(url, headers=_ADSB_HEADERS)
         r.raise_for_status()
         return r.json()
+
+
+_ACARS_HEADERS = {
+    "User-Agent": "corporatetravel-dispatch-mcp/0.1.0",
+    "Accept": "application/json",
+}
+
+
+async def acars_get(hex_addr: str) -> list[Any]:
+    """GET ACARS messages from airframes.io for a specific ICAO hex.
+
+    Returns a list of message objects. The endpoint may return a global feed
+    if no messages exist for the hex; callers must filter client-side by
+    airframe.icao.
+    """
+    url = ACARS_BASE_URL
+    async with httpx.AsyncClient(timeout=ACARS_TIMEOUT) as client:
+        r = await client.get(
+            url,
+            headers=_ACARS_HEADERS,
+            params={"aircraft": hex_addr.lower()},
+        )
+        r.raise_for_status()
+        data = r.json()
+        # Response may be a bare list or wrapped dict
+        if isinstance(data, list):
+            return data
+        if isinstance(data, dict):
+            return data.get("messages", [])
+        return []
 
 
 def handle_http_error(e: Exception) -> str:

@@ -23,6 +23,13 @@ DISPATCH_TOKEN: str = os.environ.get("DISPATCH_TOKEN", "")
 # airplanes.live ADS-B API base (unauthenticated).
 ADSB_BASE_URL: str = "https://api.airplanes.live/v2"
 
+# airframes.io ACARS aggregator (unauthenticated).
+# Returns recent ACARS/VDL2/HFDL messages; filter client-side by airframe.icao.
+ACARS_BASE_URL: str = os.environ.get(
+    "ACARS_BASE_URL", "https://api.airframes.io/messages"
+)
+
 # HTTP client timeouts (seconds).
 DISPATCH_TIMEOUT: float = float(os.environ.get("DISPATCH_TIMEOUT", "30"))
 ADSB_TIMEOUT: float = float(os.environ.get("ADSB_TIMEOUT", "15"))
+ACARS_TIMEOUT: float = float(os.environ.get("ACARS_TIMEOUT", "15"))
