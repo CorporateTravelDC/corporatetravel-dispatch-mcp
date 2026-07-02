@@ -8,6 +8,9 @@ MCP server exposing the CS Executive Services dispatch platform and airplanes.li
 tracking as portable, agent-agnostic tools. Works with any MCP-compatible agent: Claude Code,
 Cline, Cursor, Zed, Windsurf, and others via [mcpo](./docs/mcpo-openwebui.md) → Open WebUI.
 
+>  ALL Public Commits are GPG signed using Key: ABD3976FCC006E0F3FE559177286B3118BA4EFB2  Pubkey is included in this repo as ABD3976FCC006E0F3FE559177286B3118BA4EFB2.gpg
+>
+
 ## Tools (21 total)
 
 ### Dispatch Platform — Tier 0 (no auth required)

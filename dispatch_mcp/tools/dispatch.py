@@ -508,6 +508,47 @@ def register(mcp: FastMCP) -> None:  # noqa: C901
     # ---------------------------------------------------------------------------
 
     @mcp.tool(
+        name="dispatch_get_data_usage",
+        annotations={
+            "title": "Get Network Data Usage",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
+    )
+    async def dispatch_get_data_usage(days: int = 30) -> str:
+        """Get Pi network data usage from the vnstat daily log.
+
+        Returns per-interface (wld0, tailscale0) daily totals and a window summary.
+        Useful for data-plan gating decisions, monthly usage checks, and cost attribution.
+
+        Args:
+            days (int): Rolling window size in days (default 30, max 90).
+
+        Returns:
+            str: JSON object with:
+                available (bool),
+                window_days (int),
+                grand_total_gb (float): combined total across all interfaces,
+                by_interface (dict): keyed by interface name, each with
+                    rx_gb, tx_gb, total_gb for the window,
+                daily (list[dict]): per-day per-interface rows with date, interface,
+                    rx_bytes, tx_bytes, total_bytes, rx_gb, tx_gb, total_gb.
+
+        Examples:
+            - "How much data has the Pi used this month?" -> call with days=30
+            - "What's the Tailscale bandwidth usage this week?" -> call with days=7,
+              then read by_interface.tailscale0.total_gb
+            - "Are we over 100 GB on the LTE plan?" -> call, check grand_total_gb >= 100
+        """
+        try:
+            data = await dispatch_get(f"/api/v1/data-usage?days={days}")
+            return json.dumps(data, indent=2)
+        except Exception as e:
+            return handle_http_error(e)
+
+    @mcp.tool(
         name="dispatch_watchlist_get",
         annotations={
             "title": "Get VIP Watchlist Sessions",
