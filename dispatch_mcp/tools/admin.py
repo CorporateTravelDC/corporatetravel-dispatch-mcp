@@ -288,3 +288,48 @@ def register(mcp: FastMCP) -> None:
             return json.dumps(data, indent=2)
         except Exception as e:
             return handle_http_error(e)
+
+    # ---------------------------------------------------------------------------
+    # Watchdog
+    # ---------------------------------------------------------------------------
+
+    @mcp.tool(
+        name="dispatch_watchdog_status",
+        annotations={
+            "title": "Get Stack Watchdog Last Run Status",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )
+    async def dispatch_watchdog_status() -> str:
+        """Get the result of the last ctdi-watchdog run.
+
+        The self-healing watchdog runs every 5 minutes via ctdi-watchdog.timer.
+        It checks all long-running services (web, poller, pusher, runner, ntfy,
+        ollama, openwebui, acars stack, etc.) and all dispatch timers, restarts
+        any that are failed or inactive, and writes the result to a status file
+        read by this endpoint.
+
+        Returns:
+            str: JSON object with:
+                available (bool): false if no run has been recorded yet,
+                timestamp (str): ISO-8601 UTC of last run,
+                age_seconds (int): seconds elapsed since last run,
+                healthy (bool): true if no units were down at end of run,
+                healed (list[str]): units restarted successfully this run,
+                failed (list[str]): units still down after restart attempt.
+
+        Examples:
+            - "Is the stack healthy?" -> call, check healthy field
+            - "Did anything get auto-healed recently?" -> check healed list
+            - "How long ago did the watchdog last run?" -> check age_seconds (>600 = missed a cycle)
+        """
+        if err := _check_token():
+            return err
+        try:
+            data = await dispatch_get("/admin/watchdog/status", auth=True)
+            return json.dumps(data, indent=2)
+        except Exception as e:
+            return handle_http_error(e)
