@@ -102,8 +102,8 @@ tools.register(mcp)
 def main() -> None:
     transport = os.environ.get("DISPATCH_MCP_TRANSPORT", "stdio").lower()
     if transport == "http":
-        port = int(os.environ.get("DISPATCH_MCP_PORT", "8080"))
-        mcp.run(transport="streamable-http", port=port)
+        mcp.settings.port = int(os.environ.get("DISPATCH_MCP_PORT", "8080"))
+        mcp.run(transport="streamable-http")
     else:
         mcp.run(transport="stdio")
 
