@@ -7,13 +7,24 @@ against local Tailscale, ops.csexecutiveservices.com, or a dev instance.
 import os
 
 # Dispatch platform base URL.
-# Default: ops.csexecutiveservices.com (no Cloudflare Access gate).
+# Default: Tailscale (http://192.0.2.10:8000) -- on-net, bypasses CF entirely,
+# and matches the default every other platform component (dispatch-runner,
+# acars_watcher, ais_watcher) already uses.
 # Override: DISPATCH_BASE_URL env var.
 # Notes:
-#   - dispatch.csexecutiveservices.com has Cloudflare Access on POST routes; prefer ops for programmatic use.
-#   - Tailscale (http://192.0.2.10:8000) works on-net and bypasses CF entirely.
+#   - ops.csexecutiveservices.com was the prior default (chosen to avoid the
+#     Cloudflare Access gate dispatch.csexecutiveservices.com has on POST
+#     routes) but is misrouted to the corporatetraveldc-runner (frontend SPA)
+#     container, not the FastAPI web API: /healthz there returns a bogus
+#     {"service": "dispatch-runner"} payload, and every /api/v1/* route just
+#     serves index.html (SPA fallback), which fails JSON parsing with
+#     "Expecting value: line 1 column 1 (char 0)". Fixed 2026-07-17 -- do not
+#     revert to ops.csexecutiveservices.com until that DNS/tunnel routing is
+#     actually corrected upstream.
+#   - dispatch.csexecutiveservices.com has Cloudflare Access on POST routes;
+#     fine for GET-only Tier 0 tools, avoid for admin/mutation tools.
 DISPATCH_BASE_URL: str = os.environ.get(
-    "DISPATCH_BASE_URL", "https://ops.csexecutiveservices.com"
+    "DISPATCH_BASE_URL", "http://192.0.2.10:8000"
 ).rstrip("/")
 
 # Admin bearer token for /admin/* routes. Created via `csex-token create`.
