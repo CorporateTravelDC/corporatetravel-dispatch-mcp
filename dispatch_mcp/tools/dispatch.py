@@ -575,7 +575,7 @@ def register(mcp: FastMCP) -> None:  # noqa: C901
             - "Is KLM651 being tracked?" -> call, filter by subject=='KLM651'
         """
         try:
-            data = await dispatch_get("/api/v1/watchlist")
+            data = await dispatch_get("/api/v1/watchlist", auth=True)
             return json.dumps(data, indent=2)
         except Exception as e:
             return handle_http_error(e)
