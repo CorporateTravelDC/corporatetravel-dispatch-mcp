@@ -48,6 +48,7 @@ Tool inventory (30 tools):
     Dispatch platform — FIDS (DCA/IAD gate + baggage, MWAA):
         dispatch_get_fids_flight       /api/v1/fids/{airport}/{flight}
         dispatch_get_fids_snapshot     /api/v1/fids/{airport}
+        dispatch_get_fids_arrivals     /api/v1/fids/{airport}/arrivals  (DCA/IAD/BWI, SWIM+website+AeroAPI)
 
     FAA Aircraft Registry (local cache, updated weekly):
         dispatch_lookup_aircraft       /api/v1/aircraft/{identifier}
