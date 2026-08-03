@@ -27,6 +27,21 @@ DISPATCH_BASE_URL: str = os.environ.get(
     "DISPATCH_BASE_URL", "http://192.0.2.10:8000"
 ).rstrip("/")
 
+# Fallback base URL, tried only when DISPATCH_BASE_URL fails at the transport
+# level (connection refused/timeout -- Tailscale unreachable, laptop off-net,
+# DERP hiccup). Never used to retry an HTTP-level error (401/403/404/429/5xx)
+# from a server that DID answer -- that's not a "primary is down" signal.
+# Added 2026-07-26 per operator: Tailscale stays primary/default; Cloudflare
+# becomes an explicit, code-level failback instead of the two being separate
+# uncoordinated defaults across different tools.
+# Note: dispatch.csexecutiveservices.com has Cloudflare Access on POST routes
+# -- GET/Tier-0 fallback calls should succeed, POST/admin fallback calls may
+# still 401/403 there. That's a clean, informative failure, which is still
+# strictly better than no fallback attempt at all.
+DISPATCH_FALLBACK_URL: str = os.environ.get(
+    "DISPATCH_FALLBACK_URL", "https://dispatch.csexecutiveservices.com"
+).rstrip("/")
+
 # Admin bearer token for /admin/* routes. Created via `csex-token create`.
 # Tier 0 (/api/v1/*) endpoints work without this.
 DISPATCH_TOKEN: str = os.environ.get("DISPATCH_TOKEN", "")
