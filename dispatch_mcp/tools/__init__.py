@@ -8,7 +8,7 @@ from mcp.server.fastmcp import FastMCP
 
 def register(mcp: FastMCP) -> None:
     """Register all tool modules against the given FastMCP instance."""
-    from dispatch_mcp.tools import dispatch, flight, admin, aircraft, acars, fids
+    from dispatch_mcp.tools import dispatch, flight, admin, aircraft, acars, fids, second_brain
 
     dispatch.register(mcp)
     flight.register(mcp)
@@ -16,3 +16,4 @@ def register(mcp: FastMCP) -> None:
     aircraft.register(mcp)
     acars.register(mcp)
     fids.register(mcp)
+    second_brain.register(mcp)

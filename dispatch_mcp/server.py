@@ -24,7 +24,7 @@ Environment variables:
     DISPATCH_MCP_TRANSPORT  'stdio' or 'http' (default: stdio)
     DISPATCH_MCP_PORT       Port for HTTP transport (default: 8080)
 
-Tool inventory (30 tools):
+Tool inventory (34 tools):
     Dispatch platform — Tier 0 (no auth):
         dispatch_health_check          /healthz
         dispatch_get_feeds             /api/v1/feeds
@@ -61,6 +61,9 @@ Tool inventory (30 tools):
         dispatch_admin_force_opsplan_snapshot
         dispatch_admin_send_push_alert /admin/push-test-alert
         dispatch_admin_get_audit_log   /admin/audit
+
+    Second brain (DISPATCH_TOKEN required):
+        dispatch_remember              /api/v1/remember
 
     Flight tracking — airplanes.live (no auth):
         flight_get_by_callsign         /v2/callsign/{callsign}
