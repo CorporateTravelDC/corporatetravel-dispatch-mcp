@@ -50,6 +50,12 @@ Cline, Cursor, Zed, Windsurf, and others via [mcpo](./docs/mcpo-openwebui.md) â†
 | `dispatch_admin_send_push_alert` | Send ntfy push notification |
 | `dispatch_admin_get_audit_log` | View audit log |
 
+### Second Brain (requires `DISPATCH_TOKEN`)
+
+| Tool | Description |
+|---|---|
+| `dispatch_remember` | Capture a manual note into the second-brain vault (`01-Sources/manual/`). Scrub-gated (CUI/PII block, not redact). |
+
 ### Flight Tracking â€” airplanes.live (no auth)
 
 | Tool | Description |
