@@ -23,7 +23,9 @@ class WatchlistAddInput(BaseModel):
 
     session_type: str = Field(
         ...,
-        description="Session type, e.g. 'flight', 'ground', 'person'",
+        description="Session type -- one of 'flight', 'train', 'vessel' "
+                    "(the only entry types the dispatch backend actually "
+                    "supports; see src/web/routes/watchlist.py).",
         min_length=1,
         max_length=32,
     )
@@ -600,7 +602,8 @@ def register(mcp: FastMCP) -> None:  # noqa: C901
 
         Args:
             params (WatchlistAddInput):
-                - session_type (str): 'flight', 'ground', or 'person'
+                - session_type (str): 'flight', 'train', or 'vessel' -- the
+                  only entry types the backend supports
                 - subject (str): Human label, e.g. 'KLM651' or 'POTUS'
                 - hex (str, optional): ICAO 24-bit hex, required for flight sessions
                 - registration (str, optional): Aircraft tail number
@@ -613,9 +616,34 @@ def register(mcp: FastMCP) -> None:  # noqa: C901
             - "Start tracking KLM651" -> first resolve hex via flight_get_by_callsign,
               then call with session_type='flight', subject='KLM651', hex=<resolved>
         """
+        # 2026-08-10: fixed two real bugs found investigating a 403 on this
+        # tool -- (1) this call never passed auth=True, so the bearer token
+        # was never attached regardless of whether DISPATCH_TOKEN was set;
+        # (2) it POSTed to the bare "/api/v1/watchlist" path, which doesn't
+        # exist on the backend at all (see src/web/routes/watchlist.py --
+        # real routes are per-type: /flights, /trains, /vessels, each with
+        # its own field names). "ground"/"person" session types documented
+        # here previously have no backend route -- removed from the
+        # description above rather than silently accepting a type that
+        # would 404.
+        _ROUTE_BY_TYPE = {"flight": "/api/v1/watchlist/flights",
+                          "train": "/api/v1/watchlist/trains",
+                          "vessel": "/api/v1/watchlist/vessels"}
+        session_type = params.session_type.strip().lower()
+        route = _ROUTE_BY_TYPE.get(session_type)
+        if not route:
+            return (f"Error: session_type must be one of {sorted(_ROUTE_BY_TYPE)} "
+                    f"-- got {params.session_type!r}. The backend has no "
+                    f"generic/ground/person watchlist route.")
         try:
-            body = params.model_dump(exclude_none=True)
-            data = await dispatch_post("/api/v1/watchlist", body=body)
+            body = {
+                "identifier": params.subject,
+                "destination": params.destination_icao,
+                "hex_id": params.hex,
+                "registration": params.registration,
+            }
+            body = {k: v for k, v in body.items() if v is not None}
+            data = await dispatch_post(route, body=body, auth=True)
             return json.dumps(data, indent=2)
         except Exception as e:
             return handle_http_error(e)
@@ -648,15 +676,30 @@ def register(mcp: FastMCP) -> None:  # noqa: C901
             - "Stop tracking KLM651" -> get hex via flight_get_by_callsign, then call with hex=<hex>
             - "Remove watchlist session 5e9b3d" -> call with session_id='5e9b3d'
         """
+        # 2026-08-10: fixed the same two bug classes as dispatch_watchlist_add
+        # -- no auth=True (token never attached), and a query-param DELETE
+        # against a path that doesn't exist (the real route is
+        # DELETE /api/v1/watchlist/{entry_id}, path param only -- no
+        # hex-based delete exists backend-side at all). hex-based removal
+        # is now done client-side: list entries (auth=True), filter by
+        # hex_id, delete each match by its real entry id.
+        if not params.session_id and not params.hex:
+            return "Error: Provide at least one of session_id or hex."
         try:
-            query: dict = {}
             if params.session_id:
-                query["session_id"] = params.session_id
-            if params.hex:
-                query["hex"] = params.hex
-            if not query:
-                return "Error: Provide at least one of session_id or hex."
-            data = await dispatch_delete("/api/v1/watchlist", params=query)
-            return json.dumps(data, indent=2)
+                data = await dispatch_delete(f"/api/v1/watchlist/{params.session_id}", auth=True)
+                return json.dumps(data, indent=2)
+
+            target_hex = params.hex.strip().lower()
+            entries = await dispatch_get("/api/v1/watchlist", auth=True)
+            matches = [e for e in entries if (e.get("hex_id") or e.get("hex") or "").lower() == target_hex]
+            if not matches:
+                return f"No watchlist entries found for hex {params.hex!r}."
+            results = []
+            for e in matches:
+                entry_id = e.get("id") or e.get("session_id")
+                data = await dispatch_delete(f"/api/v1/watchlist/{entry_id}", auth=True)
+                results.append({"entry_id": entry_id, "result": data})
+            return json.dumps(results, indent=2)
         except Exception as e:
             return handle_http_error(e)
