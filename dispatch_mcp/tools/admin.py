@@ -3,8 +3,17 @@
 All admin tools require a valid DISPATCH_TOKEN bearer token.
 Create one on the Pi with: csex-token create
 
-Admin routes are only accessible from Tailscale (100.x.x.x) or via ops.csexecutiveservices.com
-with a valid token. dispatch.csexecutiveservices.com has Cloudflare Access on POST routes.
+Admin routes are only reachable from Tailscale (the default DISPATCH_BASE_URL,
+http://100.94.80.100:8000) with a valid token. dispatch.csexecutiveservices.com has
+Cloudflare Access on POST routes, so admin calls that fail over to it may 401/403.
+ops.csexecutiveservices.com is fully retired and hard-rejected app-side — do not
+point DISPATCH_BASE_URL at it.
+
+Note: _check_token() below only verifies this PROCESS has a token configured,
+not that the MCP caller presented one. There is no per-caller authorization —
+this module must only be registered on instances where reachability itself is
+the access control (loopback/tailnet). DISPATCH_MCP_PUBLIC_SAFE=1 excludes it
+entirely (see tools/__init__.py).
 """
 
 import json

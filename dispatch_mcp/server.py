@@ -6,25 +6,36 @@ MCP server exposing the CS Executive Services dispatch platform and airplanes.li
 flight tracking as portable, agent-agnostic tools.
 
 Runs via stdio (default) for Claude Code, Cline, Cursor, Zed, Windsurf, and any
-MCP-compatible agent. Can also run as a streamable HTTP server for mcpo → Open WebUI
-integration.
+MCP-compatible agent. A streamable-HTTP transport is also available
+(DISPATCH_MCP_TRANSPORT=http); note the deployed mcpo bridges on the Pi spawn
+the stdio binary directly, they do not use the HTTP transport.
 
 Usage:
     # stdio (for Claude Code and local agents):
     dispatch-mcp
 
-    # HTTP (for mcpo / Open WebUI):
+    # streamable HTTP:
     DISPATCH_MCP_TRANSPORT=http DISPATCH_MCP_PORT=8080 dispatch-mcp
 
 Environment variables:
-    DISPATCH_BASE_URL   Dispatch platform base URL (default: https://ops.csexecutiveservices.com)
-    DISPATCH_TOKEN      Admin bearer token for /admin/* routes (create with csex-token create)
-    DISPATCH_TIMEOUT    HTTP timeout in seconds for dispatch calls (default: 30)
-    ADSB_TIMEOUT        HTTP timeout in seconds for airplanes.live calls (default: 15)
+    DISPATCH_BASE_URL       Dispatch platform base URL
+                            (default: http://100.94.80.100:8000, Tailscale)
+    DISPATCH_FALLBACK_URL   Failover base URL, tried only on transport-level
+                            failure of the primary
+                            (default: https://dispatch.csexecutiveservices.com)
+    DISPATCH_TOKEN          Admin bearer token for /admin/* routes (create with csex-token create)
+    DISPATCH_TIMEOUT        HTTP timeout in seconds for dispatch calls (default: 30)
+    ADSB_TIMEOUT            HTTP timeout in seconds for airplanes.live calls (default: 15)
+    ACARS_TIMEOUT           HTTP timeout in seconds for airframes.io calls (default: 15)
     DISPATCH_MCP_TRANSPORT  'stdio' or 'http' (default: stdio)
     DISPATCH_MCP_PORT       Port for HTTP transport (default: 8080)
+    DISPATCH_MCP_PUBLIC_SAFE  '1'/'true'/'yes' skips registering admin and
+                            second_brain tools entirely (default: unset = full toolset)
 
-Tool inventory (34 tools):
+Note: ops.csexecutiveservices.com is fully retired and hard-rejected on the
+platform side (runner _RETIRED_HOSTNAMES). Do not use it as DISPATCH_BASE_URL.
+
+Tool inventory (34 tools; 26 with DISPATCH_MCP_PUBLIC_SAFE=1):
     Dispatch platform — Tier 0 (no auth):
         dispatch_health_check          /healthz
         dispatch_get_feeds             /api/v1/feeds
@@ -39,11 +50,12 @@ Tool inventory (34 tools):
         dispatch_get_brief             /api/v1/brief
         dispatch_get_opsplan           /api/v1/opsplan
         dispatch_get_runsheet          /api/v1/runsheet  (Tailscale-only)
+        dispatch_get_data_usage        /api/v1/data-usage?days={n}
 
-    Dispatch platform — Watchlist:
+    Dispatch platform — Watchlist (bearer token sent):
         dispatch_watchlist_get         /api/v1/watchlist  GET
-        dispatch_watchlist_add         /api/v1/watchlist  POST
-        dispatch_watchlist_remove      /api/v1/watchlist  DELETE
+        dispatch_watchlist_add         /api/v1/watchlist/{flights|trains|vessels}  POST
+        dispatch_watchlist_remove      /api/v1/watchlist/{session_id}  DELETE
 
     Dispatch platform — FIDS (DCA/IAD gate + baggage, MWAA):
         dispatch_get_fids_flight       /api/v1/fids/{airport}/{flight}
@@ -54,15 +66,16 @@ Tool inventory (34 tools):
         dispatch_lookup_aircraft       /api/v1/aircraft/{identifier}
         dispatch_faa_registry_status   /api/v1/aircraft-registry/status
 
-    Admin (DISPATCH_TOKEN required):
+    Admin (DISPATCH_TOKEN required; excluded when public_safe):
         dispatch_admin_health          /admin/healthz
         dispatch_admin_refresh_feed    /admin/refresh-feed/{name}
-        dispatch_admin_force_recompute_cps
-        dispatch_admin_force_opsplan_snapshot
+        dispatch_admin_force_recompute_cps  /admin/force-recompute-cps
+        dispatch_admin_force_opsplan_snapshot  /admin/force-opsplan-snapshot
         dispatch_admin_send_push_alert /admin/push-test-alert
         dispatch_admin_get_audit_log   /admin/audit
+        dispatch_watchdog_status       /admin/watchdog/status
 
-    Second brain (DISPATCH_TOKEN required):
+    Second brain (DISPATCH_TOKEN required; excluded when public_safe):
         dispatch_remember              /api/v1/remember
 
     Flight tracking — airplanes.live (no auth):
@@ -72,6 +85,8 @@ Tool inventory (34 tools):
 
     ACARS — airframes.io (no auth):
         acars_get_by_hex               messages?aircraft={hex}
+
+Docstring verified against tools/*.py 2026-08-11.
 """
 
 import os

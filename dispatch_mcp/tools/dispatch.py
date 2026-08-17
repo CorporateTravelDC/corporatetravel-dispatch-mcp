@@ -486,7 +486,7 @@ def register(mcp: FastMCP) -> None:  # noqa: C901
 
         NOTE: This endpoint is Tier 1 — it requires Tailscale network access
         (100.x.x.x range) or will return 403. Set DISPATCH_BASE_URL to the
-        Tailscale address (http://192.0.2.10:8000) to access this endpoint.
+        Tailscale address (http://100.94.80.100:8000) to access this endpoint.
 
         Returns:
             str: JSON object with 'trips' list. Each trip includes:

@@ -1,15 +1,23 @@
 """Configuration for corporatetravel-dispatch-mcp.
 
 All values are environment-variable overridable so the same server binary works
-against local Tailscale, ops.csexecutiveservices.com, or a dev instance.
+against local Tailscale (the default), dispatch.csexecutiveservices.com (the
+Cloudflare failback), or a dev instance.
 """
 
 import os
 
 # Dispatch platform base URL.
-# Default: Tailscale (http://192.0.2.10:8000) -- on-net, bypasses CF entirely,
-# and matches the default every other platform component (dispatch-runner,
-# acars_watcher, ais_watcher) already uses.
+# Default: Tailscale (http://100.94.80.100:8000) -- on-net, bypasses CF
+# entirely, and matches the default every other platform component
+# (dispatch-runner, acars_watcher, ais_watcher, the agentic-tools MCP's
+# AGENTIC_MCP_DISPATCH_HOST) already uses.
+# 2026-08-16: this default was 192.0.2.10 (IANA TEST-NET-1, a documentation
+# placeholder, not the box's real Tailscale address) -- every admin-tool call
+# (dispatch_watchdog_status, dispatch_admin_health, etc.) was failing to
+# reach the primary at the transport level and silently falling back to
+# DISPATCH_FALLBACK_URL, which Cloudflare-Access-gates POST/admin routes and
+# 302-redirects instead of returning JSON. Fixed to the real address.
 # Override: DISPATCH_BASE_URL env var.
 # Notes:
 #   - ops.csexecutiveservices.com was the prior default (chosen to avoid the
@@ -18,13 +26,14 @@ import os
 #     container, not the FastAPI web API: /healthz there returns a bogus
 #     {"service": "dispatch-runner"} payload, and every /api/v1/* route just
 #     serves index.html (SPA fallback), which fails JSON parsing with
-#     "Expecting value: line 1 column 1 (char 0)". Fixed 2026-07-17 -- do not
-#     revert to ops.csexecutiveservices.com until that DNS/tunnel routing is
-#     actually corrected upstream.
+#     "Expecting value: line 1 column 1 (char 0)". Fixed 2026-07-17.
+#     2026-08-11 update: ops.csexecutiveservices.com is now FULLY RETIRED and
+#     hard-rejected app-side (runner/main.py _RETIRED_HOSTNAMES on the
+#     dispatch platform). Never revert to it.
 #   - dispatch.csexecutiveservices.com has Cloudflare Access on POST routes;
 #     fine for GET-only Tier 0 tools, avoid for admin/mutation tools.
 DISPATCH_BASE_URL: str = os.environ.get(
-    "DISPATCH_BASE_URL", "http://192.0.2.10:8000"
+    "DISPATCH_BASE_URL", "http://100.94.80.100:8000"
 ).rstrip("/")
 
 # Fallback base URL, tried only when DISPATCH_BASE_URL fails at the transport
